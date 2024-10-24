@@ -1,34 +1,55 @@
-// src/LandingPage.jsx
+// src/components/LandingPage.js
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 import RecipeCard from "./RecipeCard";
+import { Link } from "react-router-dom";
 
 const LandingPage = () => {
   const [recipes, setRecipes] = useState([]);
-
-  const fetchRecipes = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/api/recipes/"); // Ensure this URL is correct
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      const data = await response.json();
-      setRecipes(data); // Ensure data contains _id
-    } catch (error) {
-      console.error("Error fetching recipes:", error);
-    }
-  };
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    const fetchRecipes = async () => {
+      setLoading(true); // Start loading
+      try {
+        const response = await axios.get("http://localhost:5000/api/recipes/");
+        console.log("API Response:", response.data); // Log the response data
+
+        // If response contains an array of recipes
+        if (Array.isArray(response.data.data)) {
+          setRecipes(response.data.data);
+        } else if (response.data.data) {
+          // If response contains a single recipe object
+          setRecipes([response.data.data]); // Wrap it in an array
+        }
+      } catch (error) {
+        console.error("Error fetching recipes:", error);
+        setError("Failed to fetch recipes. Please try again later.");
+      } finally {
+        setLoading(false); // End loading
+      }
+    };
+
     fetchRecipes();
   }, []);
 
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>{error}</p>;
+
   return (
-    <div className="landing-page">
-      <h1>Popular Dishes</h1>
+    <div>
+      <h1>Recipe List</h1>
       <div className="recipe-list">
-        {recipes.map((recipe) => (
-          <RecipeCard key={recipe._id} recipe={recipe} /> // Ensure recipe._id is defined
-        ))}
+        {recipes.length > 0 ? (
+          recipes.map((recipe) => (
+            <Link key={recipe._id} to={`/recipes/${recipe._id}`}>
+              <RecipeCard recipe={recipe} />
+            </Link>
+          ))
+        ) : (
+          <p>No recipes found.</p>
+        )}
       </div>
     </div>
   );

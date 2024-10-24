@@ -1,30 +1,20 @@
-const express = require("express");
-const Recipe = require("../models/recipe-model");
-
+const express = require('express');
 const router = express.Router();
+const recipeController = require('../controllers/recipeController');
 
-// Fetch all recipes
-router.get("/", async (req, res) => {
-  try {
-    const recipes = await Recipe.find();
-    res.json(recipes);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching recipes" });
-  }
-});
+// Get all recipes
+router.get('/', recipeController.getAllRecipes);
 
-// Fetch a specific recipe by ID
-router.get("/:id", async (req, res) => {
-  try {
-    const recipe = await Recipe.findById(req.params.id);
-    if (recipe) {
-      res.json(recipe);
-    } else {
-      res.status(404).json({ message: "Recipe not found" });
-    }
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching recipe" });
-  }
-});
+// Get a single recipe by ID
+router.get('/:id', recipeController.getRecipeById);
+
+// Create a new recipe
+router.post('/', recipeController.createRecipe);
+
+// Update a recipe by ID
+router.put('/:id', recipeController.updateRecipe);
+
+// Delete a recipe by ID
+router.delete('/:id', recipeController.deleteRecipe);
 
 module.exports = router;

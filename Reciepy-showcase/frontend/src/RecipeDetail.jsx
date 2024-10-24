@@ -1,34 +1,44 @@
-// src/RecipeDetail.jsx
+// src/components/RecipeDetail.jsx
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import axios from "axios";
 
 const RecipeDetail = () => {
-  const { id } = useParams();
+  const { id } = useParams(); // Get the recipe ID from the URL
   const [recipe, setRecipe] = useState(null);
-
-  const fetchRecipeDetail = async () => {
-    try {
-      const response = await fetch(`http://localhost:5000/api/recipes/${id}`);
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      const data = await response.json();
-      setRecipe(data);
-    } catch (error) {
-      console.error("Error fetching recipe details:", error);
-    }
-  };
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchRecipeDetail();
-  }, [id]);
+    const fetchRecipe = async () => {
+      setLoading(true); // Start loading
+      try {
+        const response = await axios.get(
+          `http://localhost:5000/api/recipes/${id}`
+        );
+        console.log("Recipe API Response:", response.data); // Log the response data
+        setRecipe(response.data.data); // Set the recipe data (assuming your response structure is { success: true, data: recipe })
+      } catch (error) {
+        console.error("Error fetching recipe:", error);
+        setError("Failed to fetch recipe. Please try again later.");
+      } finally {
+        setLoading(false); // End loading
+      }
+    };
 
-  if (!recipe) return <p>Loading...</p>;
+    fetchRecipe();
+  }, [id]); // Run this effect when the ID changes
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>{error}</p>;
+
+  if (!recipe) return <p>No recipe found.</p>;
 
   return (
-    <div className="recipe-detail">
+    <div>
       <h1>{recipe.title}</h1>
       <img src={recipe.imageURL} alt={recipe.title} />
+      <p>{recipe.description}</p>
       <h2>Ingredients</h2>
       <ul>
         {recipe.ingredients.map((ingredient, index) => (
@@ -37,6 +47,8 @@ const RecipeDetail = () => {
       </ul>
       <h2>Instructions</h2>
       <p>{recipe.instructions}</p>
+      <h2>Preparation Time</h2>
+      <p>{recipe.preparationTime}</p>
     </div>
   );
 };
